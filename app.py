@@ -17,9 +17,32 @@ st.set_page_config(
     layout="wide"
 )
 
-st.title("📄 Resume RAG Chatbot")
-st.markdown("Upload a resume and ask questions about it.")
+st.markdown("""
+<h1 style='text-align:center;color:white;'>
+🚀 Resume Intelligence Assistant
+</h1>
+""", unsafe_allow_html=True)
 
+st.markdown("""
+<h3 style='text-align:center;color:#cbd5e1;'>
+AI-Powered Resume Analysis using RAG, FAISS and Groq
+</h3>
+""", unsafe_allow_html=True)
+
+# ---------------------------------
+# Project Metrics
+# ---------------------------------
+
+col1, col2, col3 = st.columns(3)
+
+with col1:
+    st.metric("LLM", "Groq")
+
+with col2:
+    st.metric("Vector DB", "FAISS")
+
+with col3:
+    st.metric("Framework", "LangChain")
 # -------------------------------------------------
 # Session State
 # -------------------------------------------------
@@ -30,6 +53,33 @@ if "messages" not in st.session_state:
 if "resume_processed" not in st.session_state:
     st.session_state.resume_processed = False
 
+
+# -------------------------------------------------
+# Sidebar
+# -------------------------------------------------
+
+with st.sidebar:
+
+    st.title("🚀 Resume AI")
+
+    st.success("Resume RAG Chatbot")
+
+    st.markdown("---")
+
+    st.write("### Tech Stack")
+
+    st.write("🤖 Groq LLM")
+    st.write("🧠 LangChain")
+    st.write("📊 FAISS")
+    st.write("📄 PyPDF")
+    st.write("⚡ Streamlit")
+
+    st.markdown("---")
+
+    if st.button("🗑️ Clear Chat"):
+        st.session_state.messages = []
+        st.rerun()
+
 # -------------------------------------------------
 # Upload Resume
 # -------------------------------------------------
@@ -37,6 +87,19 @@ if "resume_processed" not in st.session_state:
 uploaded_file = st.file_uploader(
     "Upload Resume PDF",
     type=["pdf"]
+)
+
+
+# -------------------------------------------------
+# ATS Resume Analyzer
+# -------------------------------------------------
+
+st.subheader("🎯 ATS Resume Analyzer")
+
+job_description = st.text_area(
+    "Paste Job Description Here",
+    height=200,
+    key="job_description"
 )
 
 # -------------------------------------------------
@@ -55,6 +118,7 @@ if uploaded_file is not None and not st.session_state.resume_processed:
 
             # Extract text
             text = extract_text_from_pdf("temp_resume.pdf")
+            st.session_state["resume_text"] = text
 
             if not text.strip():
                 st.error("Could not extract text from PDF.")
@@ -73,8 +137,50 @@ if uploaded_file is not None and not st.session_state.resume_processed:
 
             st.success("✅ Resume Indexed Successfully!")
 
+            
+
         except Exception as e:
             st.error(f"Error while processing PDF: {e}")
+
+# =================================================
+#  ATS CODE HERE
+# =================================================
+
+if st.session_state.resume_processed:
+
+    if job_description.strip():
+
+        if st.button("🎯 Check ATS Score", key="ats_button"):
+
+            resume_text = st.session_state["resume_text"]
+
+            resume_words = set(
+                resume_text.lower().split()
+            )
+
+            jd_words = set(
+                job_description.lower().split()
+            )
+
+            matched_words = (
+                resume_words.intersection(jd_words)
+            )
+
+            score = (
+                len(matched_words)
+                /
+                max(len(jd_words), 1)
+            ) * 100
+
+            st.subheader("📊 ATS Analysis Dashboard")
+
+            st.metric(
+                "ATS Score",
+                f"{score:.1f}%"
+            )
+
+            st.progress(min(int(score), 100))
+
 
 # -------------------------------------------------
 # Ask Questions
@@ -140,16 +246,64 @@ if st.session_state.messages:
 
     st.subheader("💬 Chat History")
 
-    for chat in reversed(
-        st.session_state.messages
-    ):
+    for chat in reversed(st.session_state.messages):
 
-        st.markdown(
-            f"**🧑 Question:** {chat['question']}"
-        )
+        with st.chat_message("user"):
+            st.write(chat["question"])
 
-        st.markdown(
-            f"**🤖 Answer:** {chat['answer']}"
-        )
+        with st.chat_message("assistant"):
+            st.write(chat["answer"])
 
-        st.divider()
+
+# -------------------------------------------------
+# Footer
+# -------------------------------------------------
+
+st.markdown("---")
+
+st.markdown(
+    """
+    <center>
+    🚀 Built with Streamlit • LangChain • FAISS • Groq
+    </center>
+    """,
+    unsafe_allow_html=True
+)
+
+# -------------------------------------------------
+# Custom CSS
+# -------------------------------------------------
+
+st.markdown("""
+<style>
+...
+your css here
+...
+</style>
+""", unsafe_allow_html=True)
+
+# -------------------------------------------------
+# Banner Image
+# -------------------------------------------------
+
+st.image(
+    "assets/ai_banner.png",
+    use_container_width=True
+)
+
+st.set_page_config(
+    page_title="Resume RAG Chatbot",
+    page_icon="📄",
+    layout="wide"
+)
+
+
+# -------------------------------------------------
+# Title
+# -------------------------------------------------
+
+st.markdown(
+    '<h1 class="main-title">Resume Intelligence Assistant</h1>',
+    unsafe_allow_html=True
+)
+
